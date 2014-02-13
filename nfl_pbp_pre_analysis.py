@@ -4,7 +4,7 @@ import os
 import json
 
 
-db = MySQLdb.connect(user="root",passwd="057005223",db="nfl_pbp")
+db = MySQLdb.connect(user="root",db="nfl_pbp",read_default_file="~/.my.cnf")
 team_query = db.cursor() #query tool for teams
 oplay = db.cursor() #query tool for original plays
 count = 0
