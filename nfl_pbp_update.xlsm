@@ -1,0 +1,276 @@
+Sub nfl_pbp_type()
+j = 2
+Do While Cells(j, "A").Value <> ""
+ If Cells(j, "C").Value = "" Then
+  Cells(j, "C").Value = 60
+ End If
+ If Cells(j, "G").Value = "" Then
+  Cells(j, "G").Value = -1
+  Cells(j, "H").Value = -1
+  Cells(j, "I").Value = 0
+ End If
+ d = Cells(j, "L").Value
+ If InStr(d, "kicks") Then
+  Cells(j, "J").Value = "Kickoff"
+ ElseIf InStr(d, "punts") Or InStr(d, "punt is BLOCKED") Then
+  Cells(j, "J").Value = "Punt"
+ ElseIf InStr(d, "field goal is") Then
+  Cells(j, "J").Value = "Field Goal Attempt"
+ ElseIf InStr(d, "extra point is") Or InStr(d, "TWO-POINT") Then
+  Cells(j, "J").Value = "Conversion Attempt"
+ ElseIf InStr(d, "PENALTY") And InStr(d, "No Play") Then
+  Cells(j, "J").Value = "Penalty-No Play"
+ ElseIf InStr(d, "PENALTY") And InStr(d, "enforced") Then
+  Cells(j, "J").Value = "Penalty-Play Result"
+ ElseIf InStr(d, "END OF GAME") Then
+  Cells(j, "J").Value = "END OF GAME"
+ Else
+  Cells(j, "J").Value = "Play"
+ End If
+j = j + 1
+Loop
+End Sub
+
+Sub nfl_pbp_netgain()
+j = 2
+Do While Cells(j, "A").Value <> ""
+ If Cells(j, "J").Value = "Field Goal Attempt" Then
+     Cells(j, "K").Value = Cells(j, "I").Value + 17
+ ElseIf Cells(j, "L").Value = "END OF GAME" Then
+     Cells(j, "K").Value = 0
+ ElseIf Cells(j, "J").Value = "Punt" Then
+     Cells(j, "K").Value = Cells(j, "I").Value + Cells(j + 1, "I").Value - 100
+ ElseIf Cells(j, "J").Value = "Kickoff" Then
+     Cells(j, "K").Value = Cells(j + 1, "I").Value
+ ElseIf Cells(j, "J").Value = "Conversion Attempt" Then
+     Cells(j, "K").Value = 0
+ ElseIf Cells(j, "B").Value = 2 And Cells(j + 1, "B").Value = 3 Then
+     Cells(j, "K").Value = 0
+ ElseIf Cells(j, "B").Value = 4 And Cells(j + 1, "B").Value = 5 Then
+     Cells(j, "K").Value = 0
+ ElseIf Cells(j, "B").Value >= 4 And Cells(j + 1, "B").Value = 1 Then
+     Cells(j, "K").Value = 0
+ ElseIf Cells(j, "E").Value = Cells(j + 1, "E").Value Then
+     Cells(j, "K").Value = Cells(j, "I").Value - Cells(j + 1, "I").Value
+ ElseIf Cells(j, "E").Value = Cells(j + 1, "F").Value And Cells(j, "G") = 4 Then
+     Cells(j, "K").Value = Cells(j, "I").Value + Cells(j + 1, "I").Value - 100
+ ElseIf Cells(j, "E").Value = Cells(j + 1, "F").Value Then
+     Cells(j, "K").Value = 0
+     Cells(j, "P").Value = "TURNOVER"
+ Else
+     Cells(j, "K").Value = 0
+ End If
+j = j + 1
+Loop
+End Sub
+
+Sub nfl_drive()
+counter = 2
+plays = 0
+j = 2
+Do While Cells(j, "A").Value <> ""
+d = Cells(j, "L").Value
+d1 = Cells(j + 1, "L").Value
+gid = Cells(j, "A").Value
+If plays = 0 And Cells(j, "J").Value <> "Kickoff" Then
+ Cells(counter, "V").Value = Cells(j, "I").Value
+ Cells(counter, "R").Value = Cells(j, "A").Value
+ Cells(counter, "S").Value = Cells(j, "E").Value
+ Cells(counter, "T").Value = Cells(j, "F").Value
+ Cells(counter, "AF").Value = Cells(j, "O").Value
+ Cells(counter, "AD").Value = Cells(j, "C").Value * 60 + Cells(j, "D").Value
+ away_s = InStr(gid, "_")
+ home_s = InStr(gid, "@")
+ l = Len(gid)
+ Cells(counter, "AA").Value = Mid(gid, away_s + 1, home_s - away_s - 1)
+ Cells(counter, "Z").Value = Right(gid, l - home_s)
+End If
+If Cells(j, "J").Value = "Play" Or Cells(j, "J").Value = "Penalty-Play Result" Then
+  plays = plays + 1
+End If
+If Cells(j, "J").Value = "Kickoff" Or InStr(d, "END OF GAME") Then
+ Cells(j, "J").Value = "Kickoff"
+ plays = 0
+ElseIf InStr(d, "punt") And Cells(j, "E") <> Cells(j + 1, "E") Then
+  Cells(counter, "U").Value = plays
+  Cells(counter, "W").Value = Cells(j, "I")
+  Cells(counter, "X").Value = "PUNT"
+  Cells(counter, "Y").Value = 0
+  If gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") Then
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value + Cells(counter, "Y").Value
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value
+  ElseIf gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") Then
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value + Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") And counter > 2 Then
+    Cells(counter, "AC").Value = 0
+    Cells(counter, "AB").Value = Cells(counter, "Y").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") And counter > 2 Then
+    Cells(counter, "AC").Value = Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = 0
+  End If
+  Cells(counter, "AE").Value = 60 * Cells(j, "C").Value + Cells(j, "D").Value
+  plays = 0
+  counter = counter + 1
+ElseIf Cells(j, "J").Value = "Conversion Attempt" Or (InStr(d, "TOUCHDOWN") And Cells(j, "A").Value <> Cells(j + 1, "A").Value) Then
+  Cells(counter, "U").Value = plays
+  Cells(counter, "W").Value = 0
+  Cells(counter, "X").Value = "TOUCHDOWN"
+  Cells(counter, "AE").Value = 60 * Cells(j, "C").Value + Cells(j, "D").Value
+  If InStr(d, "extra point is GOOD") Then
+    Cells(counter, "Y").Value = 7
+  ElseIf InStr(d, "ATTEMPT SUCCEEDS") Then
+    Cells(counter, "Y").Value = 8
+  Else
+    Cells(counter, "Y").Value = 6
+  End If
+  If gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") Then
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value + Cells(counter, "Y").Value
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value
+  ElseIf gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") Then
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value + Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") And counter > 2 Then
+    Cells(counter, "AC").Value = 0
+    Cells(counter, "AB").Value = Cells(counter, "Y").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") And counter > 2 Then
+    Cells(counter, "AC").Value = Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = 0
+  End If
+  plays = 0
+  counter = counter + 1
+ElseIf Cells(j, "J").Value = "Field Goal Attempt" Then
+  Cells(counter, "U").Value = plays
+  Cells(counter, "W").Value = Cells(j, "I")
+  Cells(counter, "X").Value = "FIELD GOAL"
+  Cells(counter, "AE").Value = 60 * Cells(j, "C").Value + Cells(j, "D").Value
+  If InStr(d, "field goal is GOOD") Then
+    Cells(counter, "Y").Value = 3
+  Else
+    Cells(counter, "Y").Value = 0
+  End If
+  If gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") Then
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value + Cells(counter, "Y").Value
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value
+  ElseIf gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") Then
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value + Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") And counter > 2 Then
+    Cells(counter, "AC").Value = 0
+    Cells(counter, "AB").Value = Cells(counter, "Y").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") And counter > 2 Then
+    Cells(counter, "AC").Value = Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = 0
+  End If
+  plays = 0
+  counter = counter + 1
+ElseIf Cells(j, "E").Value <> Cells(j + 1, "E").Value And Cells(j, "G") = 4 And Cells(j, "B").Value <= Cells(j + 1, "B").Value Then
+  Cells(counter, "U").Value = plays
+  Cells(counter, "W").Value = Cells(j, "I")
+  Cells(counter, "X").Value = "LOSS ON DOWNS"
+  Cells(counter, "AE").Value = 60 * Cells(j, "C").Value + Cells(j, "D").Value
+  Cells(counter, "Y").Value = 0
+  If gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") Then
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value + Cells(counter, "Y").Value
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value
+  ElseIf gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") Then
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value + Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") And counter > 2 Then
+    Cells(counter, "AC").Value = 0
+    Cells(counter, "AB").Value = Cells(counter, "Y").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") And counter > 2 Then
+    Cells(counter, "AC").Value = Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = 0
+  End If
+  plays = 0
+  counter = counter + 1
+ElseIf Cells(j, "E").Value <> Cells(j + 1, "E").Value And Cells(j, "B").Value <= Cells(j + 1, "B").Value Then
+  Cells(counter, "U").Value = plays
+  Cells(counter, "W").Value = Cells(j, "I")
+  Cells(counter, "X").Value = "TURNOVER"
+  Cells(counter, "AE").Value = 60 * Cells(j, "C").Value + Cells(j, "D").Value
+  Cells(counter, "Y").Value = 0
+  If gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") Then
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value + Cells(counter, "Y").Value
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value
+  ElseIf gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") Then
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value + Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") Then
+    Cells(counter, "AC").Value = 0
+    Cells(counter, "AB").Value = Cells(counter, "Y").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") Then
+    Cells(counter, "AC").Value = Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = 0
+  End If
+  plays = 0
+  counter = counter + 1
+ElseIf (Cells(j, "B").Value = 2 And Cells(j + 1, "B").Value = 3) Or (Cells(j, "B").Value = 4 And Cells(j + 1, "B").Value <> 4) Then
+  Cells(counter, "U").Value = plays
+  Cells(counter, "W").Value = Cells(j, "I")
+  Cells(counter, "X").Value = "END OF HALF"
+  Cells(counter, "AE").Value = 60 * Cells(j, "C").Value + Cells(j, "D").Value
+  Cells(counter, "Y").Value = 0
+  If gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") Then
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value + Cells(counter, "Y").Value
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value
+  ElseIf gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") Then
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value + Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") And counter > 2 Then
+    Cells(counter, "AC").Value = 0
+    Cells(counter, "AB").Value = Cells(counter, "Y").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") And counter > 2 Then
+    Cells(counter, "AC").Value = Cells(counter, "Y").Value
+    Cells(counter, "AB").Value = 0
+  End If
+  plays = 0
+  counter = counter + 1
+ElseIf InStr(d, "SAFETY") And InStr(d1, "kicks") Then
+  Cells(counter, "U").Value = plays
+  Cells(counter, "W").Value = Cells(j, "I")
+  Cells(counter, "X").Value = "SAFETY"
+  Cells(counter, "AE").Value = 60 * Cells(j, "C").Value + Cells(j, "D").Value
+  Cells(counter, "Y").Value = -2
+  If gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") Then
+    Cells(counter, "AB").Value = Cells(counter - 1, "AC").Value - Cells(counter, "Y").Value
+    Cells(counter, "AC").Value = Cells(counter - 1, "AB").Value
+  ElseIf gid = Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") Then
+    Cells(counter, "AC").Value = Cells(counter - 1, "AC").Value
+    Cells(counter, "AB").Value = Cells(counter - 1, "AB").Value - Cells(counter, "Y").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "Z") And counter > 2 Then
+    Cells(counter, "AB").Value = 0
+    Cells(counter, "AC").Value = -1 * Cells(counter, "Y").Value
+  ElseIf gid <> Cells(counter - 1, "R").Value And Cells(counter, "S").Value = Cells(counter, "AA") And counter > 2 Then
+    Cells(counter, "AB").Value = -1 * Cells(counter, "Y").Value
+    Cells(counter, "AC").Value = 0
+  End If
+  plays = 0
+  counter = counter + 1
+End If
+j = j + 1
+Loop
+End Sub
+Sub game_results()
+    counter = 2
+    j = 2
+    Do While Cells(j, "R").Value <> ""
+      If Cells(j, "R").Value <> Cells(j + 1, "R").Value Then
+        Cells(counter, "AH").Value = Cells(j, "R").Value
+        Cells(counter, "AI").Value = Cells(j, "Z").Value
+        Cells(counter, "AJ").Value = Cells(j, "AA").Value
+        Cells(counter, "AK").Value = Cells(j, "AB").Value
+        Cells(counter, "AL").Value = Cells(j, "AC").Value
+        counter = counter + 1
+      End If
+    j = j + 1
+    Loop
+End Sub
+
+Sub all_macros()
+   Call nfl_pbp_type
+   Call nfl_pbp_netgain
+   Call nfl_drive
+   Call game_results
+End Sub
