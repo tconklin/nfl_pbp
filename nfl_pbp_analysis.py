@@ -246,7 +246,7 @@ def drive_heatmap_team(team,year):
     return a_points,p_end_all
 
 def plot_all_teams(year_start,year_end):
-    db = MySQLdb.connect(user="root",passwd="057005223",db="nfl_pbp")
+    db = MySQLdb.connect(user="root",db="nfl_pbp",read_default_file="~/.my.cnf")
     team_query = db.cursor() #query tool for teams
     n_years = year_end-year_start
     team_query.execute("""select distinct offense from pbp order by offense asc""")
